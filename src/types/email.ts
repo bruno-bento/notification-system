@@ -1,7 +1,15 @@
+import {
+  DailyNotificationStats,
+  NOTIFICATION_STATUS,
+  NotificationStats,
+  NotificationStatus,
+  StatusToNumber,
+} from "./notification";
+
 export interface Email {
   id: number;
   recipient: string;
-  status: "SENT" | "BOUNCED" | "FAILED";
+  status: NotificationStatus;
   retryCount: number;
   createdAt: string;
   sentAt: string | null;
@@ -13,16 +21,32 @@ export interface Email {
   bounceAt: string | null;
 }
 
-export interface EmailStats {
-  sent: number;
-  bounced: number;
-  failed: number;
-  total: number;
-}
+export const initializeNotificationStats = (): NotificationStats => {
+  const stats = Object.values(NOTIFICATION_STATUS).reduce(
+    (acc, status) => ({
+      ...acc,
+      [status.toLowerCase()]: 0,
+    }),
+    {} as StatusToNumber
+  );
 
-export interface DailyEmailStats {
-  date: string;
-  sent: number;
-  bounced: number;
-  failed: number;
-}
+  return {
+    ...stats,
+    total: 0,
+  };
+};
+
+export const initializeDailyStats = (date: string): DailyNotificationStats => {
+  const stats = Object.values(NOTIFICATION_STATUS).reduce(
+    (acc, status) => ({
+      ...acc,
+      [status.toLowerCase()]: 0,
+    }),
+    {} as StatusToNumber
+  );
+
+  return {
+    ...stats,
+    date,
+  };
+};

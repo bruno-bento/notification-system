@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import { checkAdmin, isAuthenticated } from "../services/auth";
-import DashboardHome from "../pages/DashboardHome";
+import DashboardHome from "../pages/DashboardHome/DashboardHome";
 import DashboardLayout from "../components/DashboardLayout";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({

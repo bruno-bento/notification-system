@@ -1,5 +1,5 @@
 import { ApiResponse, LoginRequest } from "../types/api";
-
+import { jwtDecode } from "jwt-decode";
 const API_URL = "http://localhost:8080/api/v1";
 
 export const login = async (
@@ -53,7 +53,17 @@ export const setupAdmin = async (
 
 export const isAuthenticated = (): boolean => {
   const token = localStorage.getItem("token");
-  return !!token;
+
+  if (!token) return false;
+
+  try {
+    const decoded: { exp: number } = jwtDecode(token);
+    console.log(token);
+    const currentTime = Math.floor(Date.now() / 1000);
+    return decoded.exp > currentTime;
+  } catch (error) {
+    return false;
+  }
 };
 
 export const getAuthToken = (): string | null => {
