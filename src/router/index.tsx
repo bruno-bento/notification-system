@@ -1,25 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React, { ReactNode } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import { checkAdmin, isAuthenticated } from "../services/auth";
 import DashboardHome from "../pages/DashboardHome/DashboardHome";
 import DashboardLayout from "../components/DashboardLayout";
+import SMTPPage from "@/pages/SMTPPage";
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" />;
-  }
-  return <DashboardLayout>{children}</DashboardLayout>;
-};
+interface RouteConfig {
+  path: string;
+  component: ReactNode;
+  protected: boolean;
+}
 
-const AuthRouter: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [hasAdmin, setHasAdmin] = useState(false);
+const AuthRouter = () => {
+  const [loading, setLoading] = React.useState(true);
+  const [hasAdmin, setHasAdmin] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const checkAdminStatus = async () => {
       try {
         const response = await checkAdmin();
@@ -46,41 +50,51 @@ const AuthRouter: React.FC = () => {
     );
   }
 
+  const routesConfig: RouteConfig[] = [
+    {
+      path: "/",
+      component: <DashboardHome />,
+      protected: true,
+    },
+    {
+      path: "/login",
+      component: hasAdmin ? <LoginPage /> : <Navigate to="/register" />,
+      protected: false,
+    },
+    {
+      path: "/register",
+      component: !hasAdmin ? <RegisterPage /> : <Navigate to="/login" />,
+      protected: false,
+    },
+    {
+      path: "/smtp",
+      component: <SMTPPage />,
+      protected: true,
+    },
+  ];
+
+  const RouteWrapper: React.FC<{ route: RouteConfig }> = ({ route }) => {
+    const location = useLocation();
+    if (route.protected && !isAuthenticated()) {
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+    return route.protected ? (
+      <DashboardLayout>{route.component}</DashboardLayout>
+    ) : (
+      route.component
+    );
+  };
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <DashboardHome />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            isAuthenticated() ? (
-              <Navigate to="/" />
-            ) : !hasAdmin ? (
-              <Navigate to="/register" />
-            ) : (
-              <LoginPage />
-            )
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            isAuthenticated() ? (
-              <Navigate to="/" />
-            ) : hasAdmin ? (
-              <Navigate to="/login" />
-            ) : (
-              <RegisterPage />
-            )
-          }
-        />
+        {routesConfig.map((route, index) => (
+          <Route
+            key={index}
+            path={route.path}
+            element={<RouteWrapper route={route} />}
+          />
+        ))}
       </Routes>
     </BrowserRouter>
   );
